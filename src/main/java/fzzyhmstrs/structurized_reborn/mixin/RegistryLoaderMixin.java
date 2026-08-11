@@ -3,12 +3,17 @@ package fzzyhmstrs.structurized_reborn.mixin;
 import com.mojang.serialization.Decoder;
 import fzzyhmstrs.structurized_reborn.api.StructurePoolAddCallback;
 import fzzyhmstrs.structurized_reborn.impl.FabricStructurePoolImpl;
-import fzzyhmstrs.structurized_reborn.impl.FabricStructurePoolRegistry;
-import net.minecraft.registry.*;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.structure.pool.StructurePool;
-import net.minecraft.structure.processor.StructureProcessorList;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.HolderGetter;
+import net.minecraft.core.WritableRegistry;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.core.registries.*;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.RegistryDataLoader;
+import net.minecraft.resources.RegistryOps;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.world.level.levelgen.structure.pools.StructureTemplatePool;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessorList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -18,21 +23,21 @@ import java.util.Map;
 import java.util.Optional;
 
 
-@Mixin(RegistryLoader.class)
+@Mixin(RegistryDataLoader.class)
 public class RegistryLoaderMixin {
-    @Inject(method = "loadFromResource(Lnet/minecraft/resource/ResourceManager;Lnet/minecraft/registry/RegistryOps$RegistryInfoGetter;Lnet/minecraft/registry/MutableRegistry;Lcom/mojang/serialization/Decoder;Ljava/util/Map;)V", at = @At("TAIL"))
-    private static <E> void load(ResourceManager resourceManager, RegistryOps.RegistryInfoGetter infoGetter, MutableRegistry<E> registry, Decoder<E> elementDecoder, Map<RegistryKey<?>, Exception> errors, CallbackInfo ci) {
-        if (registry.getKey().equals(RegistryKeys.TEMPLATE_POOL)) {
-            Optional<RegistryOps.RegistryInfo<StructureProcessorList>> optionalRegistryInfo = infoGetter.getRegistryInfo(RegistryKeys.PROCESSOR_LIST);
+    @Inject(method = "loadContentsFromManager(Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/resources/RegistryOps$RegistryInfoLookup;Lnet/minecraft/core/WritableRegistry;Lcom/mojang/serialization/Decoder;Ljava/util/Map;)V", at = @At("TAIL"))
+    private static <E> void load(ResourceManager resourceManager, RegistryOps.RegistryInfoLookup infoGetter, WritableRegistry<E> registry, Decoder<E> elementDecoder, Map<ResourceKey<?>, Exception> errors, CallbackInfo ci) {
+        if (registry.key().equals(Registries.TEMPLATE_POOL)) {
+            Optional<RegistryOps.RegistryInfo<StructureProcessorList>> optionalRegistryInfo = infoGetter.lookup(Registries.PROCESSOR_LIST);
             if (optionalRegistryInfo.isEmpty()){
                 return;
             }
-            RegistryEntryLookup<StructureProcessorList> registryEntryLookup = optionalRegistryInfo.get().entryLookup();
+            HolderGetter<StructureProcessorList> registryEntryLookup = optionalRegistryInfo.get().getter();
             for (E registryEntry : registry.stream().toList()) {
-                if (!(registryEntry instanceof StructurePool pool)) {
+                if (!(registryEntry instanceof StructureTemplatePool pool)) {
                     continue;
                 }
-                Identifier id = registry.getId(registryEntry);
+                Identifier id = registry.getKey(registryEntry);
                 //System.out.println("successfully registered a callback");
                 StructurePoolAddCallback.EVENT.invoker().onAdd(new FabricStructurePoolImpl(pool, id), registryEntryLookup);
             }

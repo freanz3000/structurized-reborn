@@ -3,19 +3,18 @@ package fzzyhmstrs.structurized_reborn.impl;
 import com.mojang.datafixers.util.Pair;
 import fzzyhmstrs.structurized_reborn.api.FabricStructurePool;
 import fzzyhmstrs.structurized_reborn.mixin.StructurePoolAccessor;
-import net.minecraft.structure.pool.StructurePool;
-import net.minecraft.structure.pool.StructurePoolElement;
-import net.minecraft.util.Identifier;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.levelgen.structure.pools.StructurePoolElement;
+import net.minecraft.world.level.levelgen.structure.pools.StructureTemplatePool;
 
 
 public class FabricStructurePoolImpl implements FabricStructurePool {
-    private final StructurePool pool;
+    private final StructureTemplatePool pool;
     private final Identifier id;
 
-    public FabricStructurePoolImpl(StructurePool pool, Identifier id) {
+    public FabricStructurePoolImpl(StructureTemplatePool pool, Identifier id) {
         this.pool = pool;
         this.id = id;
     }
@@ -30,12 +29,12 @@ public class FabricStructurePoolImpl implements FabricStructurePool {
         //adds to elementCounts list; minecraft makes these immutable lists, so we replace them with an array list
         StructurePoolAccessor pool = (StructurePoolAccessor) getUnderlyingPool();
 
-        if (pool.getElementCounts() instanceof ArrayList) {
-            pool.getElementCounts().add(Pair.of(element, weight));
+        if (pool.getElementWeights() instanceof ArrayList) {
+            pool.getElementWeights().add(Pair.of(element, weight));
         } else {
-            List<Pair<StructurePoolElement, Integer>> list = new ArrayList<>(pool.getElementCounts());
+            List<Pair<StructurePoolElement, Integer>> list = new ArrayList<>(pool.getElementWeights());
             list.add(Pair.of(element, weight));
-            pool.setElementCounts(list);
+            pool.setElementWeights(list);
         }
 
         // adds to elements list
@@ -45,7 +44,7 @@ public class FabricStructurePoolImpl implements FabricStructurePool {
     }
 
     @Override
-    public StructurePool getUnderlyingPool() {
+    public StructureTemplatePool getUnderlyingPool() {
         return pool;
     }
 

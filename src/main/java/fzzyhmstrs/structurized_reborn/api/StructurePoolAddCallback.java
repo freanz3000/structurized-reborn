@@ -2,8 +2,8 @@ package fzzyhmstrs.structurized_reborn.api;
 
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
-import net.minecraft.registry.RegistryEntryLookup;
-import net.minecraft.structure.processor.StructureProcessorList;
+import net.minecraft.core.HolderGetter;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessorList;
 
 /**
  * A callback for newly added structure pools.
@@ -13,7 +13,7 @@ import net.minecraft.structure.processor.StructureProcessorList;
  *
  * <p>Example usage:
  * <pre>{@code
- * StructurePoolAddCallback.EVENT.register((structurePool, registryEntryLookup) -> {
+ * StructurePoolAddCallback.EVENT.register(structurePool -> {
  * 	if (structurePool.id().toString().equals("minecraft:village/common/butcher_animals")) {
  * 		structurePool.addStructurePoolElement(StructurePoolElement.ofLegacySingle("village/common/animals/pigs_1").apply(StructurePool.Projection.RIGID), 2);
  *    }
@@ -32,5 +32,5 @@ public interface StructurePoolAddCallback {
             }
     );
 
-    void onAdd(FabricStructurePool initialPool, RegistryEntryLookup<StructureProcessorList> registryEntryLookup);
+    void onAdd(FabricStructurePool initialPool, HolderGetter<StructureProcessorList> registryEntryLookup);
 }
